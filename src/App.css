@@ -1,0 +1,21 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  /* Робимо фон прозорим, щоб побачити наші анімовані хвилі! */
+  background-color: transparent;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#root {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  /* І тут теж на всякий випадок */
+  background-color: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
