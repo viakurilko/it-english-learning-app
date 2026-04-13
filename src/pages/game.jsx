@@ -1,76 +1,104 @@
 import { useState } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { theme } from "../styles/theme";
-import { motion } from "framer-motion";
-import { RefreshCw, ArrowRight, BookOpen } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { RotateCcw, ArrowRight, Info } from "lucide-react";
 
 export default function Game() {
-  const { getAvailableWords, selectedLevel } = useGameStore();
-  const words = getAvailableWords();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const {
+    selectedLevel,
+    getAvailableWords,
+    currentWordIndex,
+    isFinished,
+    nextWord,
+    restartGame,
+  } = useGameStore();
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const nextCard = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % words.length);
-    }, 150);
-  };
+  const words = getAvailableWords();
+  const currentWord = words[currentWordIndex];
 
-  const word = words[currentIndex];
-
-  if (!word) return null;
+  if (isFinished) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px 20px" }}>
+        <h2
+          style={{
+            fontSize: "42px",
+            color: theme.colors.text,
+            marginBottom: "20px",
+          }}
+        >
+          Модуль завершено!
+        </h2>
+        <p style={{ color: theme.colors.textMuted, marginBottom: "40px" }}>
+          Ви успішно ознайомилися з усіма термінами Рівня {selectedLevel}.
+        </p>
+        <button
+          onClick={restartGame}
+          style={{
+            padding: "15px 40px",
+            background: theme.colors.primary,
+            color: "white",
+            border: "none",
+            borderRadius: theme.radius.md,
+            fontWeight: "700",
+            boxShadow: theme.shadows.button,
+            cursor: "pointer",
+          }}
+        >
+          Повторити спочатку
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div
-      style={{
-        padding: "10px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: "100%",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: "25px",
-          background: "white",
-          padding: "6px 15px",
-          borderRadius: "20px",
-          fontSize: "12px",
-          fontWeight: "bold",
-          color: theme.colors.textMuted,
-          boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
-        <BookOpen size={14} /> КАРТКА {currentIndex + 1} З {words.length} •
-        LEVEL {selectedLevel}
+    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "40px 20px" }}>
+      <div style={{ textAlign: "center", marginBottom: "40px" }}>
+        <span
+          style={{
+            background: `${theme.colors.primary}15`,
+            color: theme.colors.primary,
+            padding: "8px 20px",
+            borderRadius: "20px",
+            fontWeight: "700",
+            fontSize: "14px",
+          }}
+        >
+          ТЕОРІЯ: РІВЕНЬ {selectedLevel}
+        </span>
+        <h2 style={{ marginTop: "20px", color: theme.colors.textMuted }}>
+          {currentWordIndex + 1} з {words.length} термінів
+        </h2>
       </div>
 
       <div
-        onClick={() => setIsFlipped(!isFlipped)}
         style={{
           perspective: "1000px",
-          width: "100%",
-          maxWidth: "340px",
-          height: "380px",
-          cursor: "pointer",
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: "60px",
         }}
       >
         <motion.div
+          onClick={() => setIsFlipped(!isFlipped)}
           animate={{ rotateY: isFlipped ? 180 : 0 }}
-          transition={{ type: "spring", stiffness: 260, damping: 25 }}
+          transition={{
+            duration: 0.6,
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+          }}
           style={{
             width: "100%",
-            height: "100%",
+            maxWidth: "500px",
+            height: "350px",
             position: "relative",
             transformStyle: "preserve-3d",
+            cursor: "pointer",
           }}
         >
-          {/* Front */}
+          {/* Передня сторона (English) */}
           <div
             style={{
               position: "absolute",
@@ -83,83 +111,81 @@ export default function Game() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "30px",
-              textAlign: "center",
+              padding: "20px", // додаємо відступи, щоб довгі слова не торкалися країв
+              boxSizing: "border-box",
               border: "1px solid rgba(0,0,0,0.05)",
             }}
           >
-            <h2
+            <h1
               style={{
-                fontSize: "38px",
+                fontSize: "44px",
                 color: theme.colors.primary,
                 margin: 0,
-                wordBreak: "break-word",
+                textAlign: "center", // ЦЕНТРУЄ ТЕКСТ, ЯКЩО ВІН У ДВА РЯДКИ
+                lineHeight: "1.2", // покращує вигляд при розриві рядка
               }}
             >
-              {word.en}
-            </h2>
-            <div
-              style={{
-                position: "absolute",
-                bottom: "25px",
-                color: theme.colors.textMuted,
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "13px",
-                fontWeight: "500",
-              }}
-            >
-              <RefreshCw size={16} /> Натисни, щоб перевернути
-            </div>
+              {currentWord.en}
+            </h1>
+            {/* ... підказка ... */}
           </div>
 
-          {/* Back */}
+          {/* Задня сторона (Українська) */}
           <div
             style={{
               position: "absolute",
               width: "100%",
               height: "100%",
               backfaceVisibility: "hidden",
-              background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-              color: "white",
+              background: theme.colors.primary,
               borderRadius: theme.radius.lg,
+              color: "white",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              padding: "20px",
+              boxSizing: "border-box",
               transform: "rotateY(180deg)",
-              padding: "30px",
-              textAlign: "center",
               boxShadow: theme.shadows.card,
             }}
           >
-            <h2 style={{ fontSize: "32px", margin: 0, fontWeight: "600" }}>
-              {word.ua}
-            </h2>
+            <h1
+              style={{
+                fontSize: "44px",
+                margin: 0,
+                textAlign: "center", // ЦЕНТРУЄ ТЕКСТ, ЯКЩО ВІН У ДВА РЯДКИ
+                lineHeight: "1.2",
+              }}
+            >
+              {currentWord.ua}
+            </h1>
           </div>
         </motion.div>
       </div>
 
-      <motion.button
-        whileTap={{ scale: 0.92 }}
-        onClick={nextCard}
-        style={{
-          marginTop: "40px",
-          padding: "18px 50px",
-          background: theme.colors.text,
-          border: "none",
-          borderRadius: "35px",
-          boxShadow: theme.shadows.button,
-          fontWeight: "bold",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          color: "white",
-          fontSize: "16px",
-        }}
-      >
-        Наступна <ArrowRight size={20} />
-      </motion.button>
+      <div style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
+        <button
+          onClick={() => {
+            setIsFlipped(false);
+            nextWord();
+          }}
+          style={{
+            padding: "18px 45px",
+            background: "white",
+            color: theme.colors.text,
+            borderRadius: theme.radius.md,
+            border: "none",
+            fontWeight: "700",
+            boxShadow: theme.shadows.button,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          Наступне слово <ArrowRight size={20} />
+        </button>
+      </div>
     </div>
   );
 }
