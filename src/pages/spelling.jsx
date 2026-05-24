@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { theme } from "../styles/theme";
 import { motion, AnimatePresence } from "framer-motion";
-import { Keyboard, CheckCircle2, AlertCircle } from "lucide-react";
+import { Keyboard, CheckCircle2 } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function Spelling() {
@@ -12,7 +12,6 @@ export default function Spelling() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [status, setStatus] = useState("idle"); // idle, success, error
-  const [resultMap, setResultMap] = useState([]);
 
   useEffect(() => {
     const available = getAvailableWords();
@@ -20,18 +19,33 @@ export default function Spelling() {
     setCurrentIndex(0);
     setUserInput("");
     setStatus("idle");
-    setResultMap([]);
   }, [selectedLevel]);
 
   const currentWord = words[currentIndex];
 
-  const checkAnswer = (e) => {
+  // Лише оновлює текст, без автоматичного перемикання
+  const handleInputChange = (e) => {
+    if (status === "success") return; // Блокуємо зміну після правильної відповіді
+    setUserInput(e.target.value);
+    if (status === "error") setStatus("idle"); // Скидаємо статус помилки, якщо користувач почав виправляти
+  };
+
+  // Функція, яка спрацьовує при натисканні на кнопку
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (status !== "idle" || !userInput.trim()) return;
+
+    // Якщо слово вже вгадане, кнопка працює як "Наступне слово"
+    if (status === "success") {
+      nextWord();
+      return;
+    }
+
+    if (!userInput.trim()) return;
 
     const target = currentWord.en.toLowerCase();
     const input = userInput.trim().toLowerCase();
 
+    // Перевіряємо правильність
     if (input === target) {
       setStatus("success");
       increaseScore();
@@ -41,39 +55,30 @@ export default function Spelling() {
         origin: { y: 0.7 },
         colors: [theme.colors.secondary, theme.colors.success],
       });
-      setTimeout(nextWord, 1500);
     } else {
-      const map = target.split("").map((char, index) => ({
-        char,
-        isCorrect: input[index] === char,
-      }));
-      setResultMap(map);
+      // Якщо є помилки, просто показуємо статус помилки на кнопці
       setStatus("error");
-
-      setTimeout(() => {
-        setStatus("idle");
-        setUserInput("");
-        setResultMap([]);
-      }, 3000);
     }
   };
 
   const nextWord = () => {
     setStatus("idle");
     setUserInput("");
-    setResultMap([]);
     if (currentIndex < words.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      setCurrentIndex(0);
+      setCurrentIndex(0); // Починаємо спочатку, якщо слова закінчились
     }
   };
 
   if (!currentWord) return null;
 
+  const targetChars = currentWord.en.split("");
+  const userChars = userInput.split("");
+  const displayLength = Math.max(targetChars.length, userChars.length);
+
   return (
     <div style={{ maxWidth: "700px", margin: "0 auto", padding: "20px" }}>
-      {/* Шапка модуля - зроблена компактнішою */}
       <header style={{ textAlign: "center", marginBottom: "30px" }}>
         <div
           style={{
@@ -89,14 +94,13 @@ export default function Spelling() {
             marginBottom: "15px",
           }}
         >
-          <Keyboard size={16} /> SPELLING: LEVEL {selectedLevel}
+          <Keyboard size={16} /> SPELLING: MODULE {selectedLevel}
         </div>
         <h1 style={{ fontSize: "32px", color: theme.colors.text, margin: 0 }}>
           Надрукуй термін
         </h1>
       </header>
 
-      {/* Основна картка - зменшена (компактна версія) */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -132,93 +136,141 @@ export default function Spelling() {
           {currentWord.ua}
         </h2>
 
-        {/* Панель підсвічування помилок */}
+        {/* Панель підсвічування літер в реальному часі */}
         <div
           style={{
-            height: "50px",
-            marginBottom: "15px",
             display: "flex",
             justifyContent: "center",
-            gap: "3px",
+            gap: "6px",
+            flexWrap: "wrap",
+            marginBottom: "30px",
           }}
         >
-          <AnimatePresence>
-            {status === "error" &&
-              resultMap.map((item, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  style={{
-                    fontSize: "24px",
-                    fontWeight: "bold",
-                    fontFamily: "monospace",
-                    color: item.isCorrect
-                      ? theme.colors.success
-                      : theme.colors.danger,
-                    borderBottom: `2px solid ${item.isCorrect ? theme.colors.success : theme.colors.danger}`,
-                    padding: "0 2px",
-                    minWidth: "16px",
-                  }}
-                >
-                  {item.char}
-                </motion.span>
-              ))}
-          </AnimatePresence>
+          {Array.from({ length: displayLength }).map((_, i) => {
+            const tChar = targetChars[i];
+            const uChar = userChars[i];
+
+            let borderColor = "#e2e8f0";
+            let textColor = "#94a3b8";
+            let bgColor = "transparent";
+
+            if (uChar) {
+              if (!tChar) {
+                borderColor = theme.colors.danger;
+                textColor = theme.colors.danger;
+                bgColor = `${theme.colors.danger}15`;
+              } else if (uChar.toLowerCase() === tChar.toLowerCase()) {
+                borderColor = theme.colors.success;
+                textColor = theme.colors.success;
+                bgColor = `${theme.colors.success}15`;
+              } else {
+                borderColor = theme.colors.danger;
+                textColor = theme.colors.danger;
+                bgColor = `${theme.colors.danger}15`;
+              }
+            }
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2, delay: i * 0.05 }}
+                style={{
+                  width: "45px",
+                  height: "55px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                  fontFamily: "monospace",
+                  textTransform: "lowercase",
+                  borderBottom: `4px solid ${borderColor}`,
+                  color: textColor,
+                  background: bgColor,
+                  borderRadius: "6px 6px 0 0",
+                  transition: "0.2s all",
+                }}
+              >
+                {uChar || "_"}
+              </motion.div>
+            );
+          })}
         </div>
 
+        {/* Форма з полем вводу та кнопкою */}
         <form
-          onSubmit={checkAnswer}
-          style={{ position: "relative", maxWidth: "500px", margin: "0 auto" }}
+          onSubmit={handleSubmit}
+          style={{ position: "relative", maxWidth: "400px", margin: "0 auto" }}
         >
           <input
             autoFocus
             type="text"
             value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Пиши тут..."
-            disabled={status !== "idle"}
+            onChange={handleInputChange}
+            placeholder="Почни вводити слово..."
+            disabled={status === "success"}
             style={{
               width: "100%",
               padding: "16px",
-              fontSize: "20px",
+              fontSize: "18px",
               textAlign: "center",
               borderRadius: theme.radius.md,
-              border: `2px solid ${status === "error" ? theme.colors.danger : "#e2e8f0"}`,
-              background: "#f8fafc",
-              fontFamily: "monospace",
+              border: `2px solid ${
+                status === "success"
+                  ? theme.colors.success
+                  : status === "error"
+                    ? theme.colors.danger
+                    : "#e2e8f0"
+              }`,
+              background:
+                status === "success" ? `${theme.colors.success}10` : "#f8fafc",
               outline: "none",
               transition: "0.2s all",
+              boxSizing: "border-box",
+              marginBottom: "20px",
             }}
           />
 
           <button
             type="submit"
-            disabled={status !== "idle"}
             style={{
-              marginTop: "25px",
+              width: "100%",
               padding: "14px 40px",
-              background: theme.colors.secondary,
+              background:
+                status === "success"
+                  ? theme.colors.success
+                  : status === "error"
+                    ? theme.colors.danger
+                    : theme.colors.secondary,
               color: "white",
               border: "none",
               borderRadius: theme.radius.md,
               fontSize: "16px",
               fontWeight: "bold",
-              cursor: status === "idle" ? "pointer" : "default",
+              cursor: "pointer",
               boxShadow: theme.shadows.button,
-              opacity: status !== "idle" ? 0.7 : 1,
+              transition: "0.2s all",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
             }}
           >
-            {status === "success"
-              ? "Правильно!"
-              : status === "error"
-                ? "Упс..."
-                : "Перевірити"}
+            {status === "success" ? (
+              <>
+                <CheckCircle2 size={20} /> Наступне слово
+              </>
+            ) : status === "error" ? (
+              "Є помилки, виправ!"
+            ) : (
+              "Перевірити"
+            )}
           </button>
         </form>
       </motion.div>
 
-      {/* Компактний прогрес */}
       <div style={{ marginTop: "30px", textAlign: "center" }}>
         <p
           style={{
