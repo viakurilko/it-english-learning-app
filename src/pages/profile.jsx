@@ -5,8 +5,13 @@ import { Award, Star, Zap, Trophy, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export default function Profile() {
-  const { score, unlockedAchievements, achievementsList, resetProgress } =
-    useGameStore();
+  const {
+    playerName,
+    score,
+    unlockedAchievements,
+    achievementsList,
+    resetProgress,
+  } = useGameStore();
   const [selectedBadge, setSelectedBadge] = useState(null);
 
   const currentLevel = Math.floor(score / 100) + 1;
@@ -70,7 +75,7 @@ export default function Profile() {
             color: theme.colors.text,
           }}
         >
-          Veronika
+          {playerName}
         </h1>
         <p style={{ color: theme.colors.textMuted, fontSize: "14px" }}>
           {score} XP Накопичено

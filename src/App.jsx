@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import WelcomeScreen from "./pages/WelcomeScreen";
 import {
   BrowserRouter,
   Routes,
@@ -57,14 +58,12 @@ function AppContent() {
           zIndex: 1000,
           borderBottom: "1px solid rgba(0,0,0,0.08)",
           boxShadow: "0 2px 10px rgba(0,0,0,0.02)",
-          // Додаємо горизонтальний скрол для мобільних
           overflowX: "auto",
           whiteSpace: "nowrap",
-          WebkitOverflowScrolling: "touch", // Плавний скрол на iOS
+          WebkitOverflowScrolling: "touch",
           display: "flex",
           alignItems: "center",
           padding: "8px 15px",
-          // Ховаємо скроллбар для естетики
           msOverflowStyle: "none",
           scrollbarWidth: "none",
         }}
@@ -105,7 +104,7 @@ function AppContent() {
 
       <main
         style={{
-          paddingTop: "70px", // Трохи зменшили відступ зверху
+          paddingTop: "70px",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -194,7 +193,6 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      {/* CSS для приховування скроллбару в nav */}
       <style>{`
         nav::-webkit-scrollbar {
           display: none;
@@ -228,12 +226,12 @@ function NavLink({ to, icon, label, active }) {
         alignItems: "center",
         gap: "6px",
         fontWeight: "600",
-        fontSize: "13px", // Зменшили шрифт для мобільних
+        fontSize: "13px",
         transition: "all 0.3s ease",
         padding: "6px 10px",
         borderRadius: "8px",
         background: active ? `${theme.colors.primary}10` : "transparent",
-        flexShrink: 0, // Важливо: не дає кнопкам стискатися
+        flexShrink: 0,
       }}
     >
       {icon}
@@ -242,7 +240,17 @@ function NavLink({ to, icon, label, active }) {
   );
 }
 
+// ОНОВЛЕНИЙ БЛОК APP
 export default function App() {
+  // Дістаємо прапорець реєстрації зі сховища
+  const { isRegistered } = useGameStore();
+
+  // Якщо користувач не зареєстрований, показуємо екран привітання
+  if (!isRegistered) {
+    return <WelcomeScreen />;
+  }
+
+  // Якщо зареєстрований — завантажуємо основний застосунок
   return (
     <BrowserRouter>
       <AppContent />

@@ -71,7 +71,7 @@ export default function Home() {
                 transition: "0.2s all",
               }}
             >
-              {lvl > maxLevel ? `🔒 Level ${lvl}` : `Level ${lvl}`}
+              {lvl > maxLevel ? `🔒 Модуль ${lvl}` : `Модуль ${lvl}`}
             </button>
           ))}
         </div>
@@ -102,7 +102,7 @@ export default function Home() {
         <ModuleCard
           to="/quiz"
           icon={<Target size={32} />}
-          title="Фінальний Тест"
+          title="Вікторина"
           desc="Перевір свої знання в умовах, наближених до реальної співбесіди. Отримуй XP та відкривай нові горизонти."
           color={theme.colors.success}
         />
