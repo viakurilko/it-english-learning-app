@@ -6,8 +6,13 @@ import confetti from "canvas-confetti";
 import { Trophy, Target, HelpCircle } from "lucide-react";
 
 export default function Quiz() {
-  const { getAvailableWords, score, increaseScore, selectedLevel } =
-    useGameStore();
+  const {
+    getAvailableWords,
+    score,
+    increaseScore,
+    selectedLevel,
+    completeModule,
+  } = useGameStore();
   const [quizWords, setQuizWords] = useState([]); // Відсортована черга слів
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -31,10 +36,16 @@ export default function Quiz() {
   // Генеруємо варіанти відповідей для поточного слова в черзі
   useEffect(() => {
     if (quizWords.length === 0) return;
+
     if (currentIndex >= quizWords.length) {
+      completeModule(selectedLevel); // ДОДАНО ОСЬ ЦЕЙ РЯДОК!
       setIsFinished(true);
       return;
     }
+
+    const correctWord = quizWords[currentIndex];
+    const availableWords = getAvailableWords();
+    // ... решта коду без змін
 
     const correctWord = quizWords[currentIndex];
     const availableWords = getAvailableWords();

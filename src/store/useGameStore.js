@@ -145,10 +145,9 @@ export const useGameStore = create(
       isRegistered: false,
       score: 0,
       selectedLevel: 1,
+      maxUnlockedModule: 1, // НОВА ЗМІННА: Відстежує реально відкриті модулі
       unlockedAchievements: [],
 
-      // Список досягнень для Профілю
-      // Список досягнень для Профілю
       achievementsList: [
         {
           id: "first_steps",
@@ -178,16 +177,14 @@ export const useGameStore = create(
         {
           id: "tech_lead",
           title: "CTO",
-          desc: "Здобуто 500 XP! Ви справжній технічний директор.",
+          desc: "Модуль 5 пройдено! Ви справжній технічний директор.",
         },
       ],
 
       registerUser: (name) => set({ playerName: name, isRegistered: true }),
 
-      getMaxLevel: () => {
-        const lvl = Math.floor(get().score / 100) + 1;
-        return lvl > 5 ? 5 : lvl;
-      },
+      // Тепер максимальний рівень береться не від XP, а від реального прогресу
+      getMaxLevel: () => get().maxUnlockedModule,
 
       setSelectedLevel: (lvl) =>
         set({
@@ -201,35 +198,53 @@ export const useGameStore = create(
         return wordDatabase.filter((w) => w.level === lvl);
       },
 
+      // Функція, що спрацьовує ТІЛЬКИ в кінці проходження гри (Вікторини/Правопису)
+      completeModule: (level) => {
+        const currentMax = get().maxUnlockedModule;
+        const currentUnlocked = [...get().unlockedAchievements];
+        let newMax = currentMax;
+
+        // Відкриваємо наступний модуль лише якщо пройшли поточний максимальний
+        if (level === currentMax && currentMax < 5) {
+          newMax = currentMax + 1;
+        }
+
+        // Видаємо досягнення за відкриття модулів
+        if (newMax >= 2 && !currentUnlocked.includes("mod_2"))
+          currentUnlocked.push("mod_2");
+        if (newMax >= 3 && !currentUnlocked.includes("mod_3"))
+          currentUnlocked.push("mod_3");
+        if (newMax >= 4 && !currentUnlocked.includes("mod_4"))
+          currentUnlocked.push("mod_4");
+        if (newMax >= 5 && !currentUnlocked.includes("mod_5"))
+          currentUnlocked.push("mod_5");
+        if (level === 5 && !currentUnlocked.includes("tech_lead"))
+          currentUnlocked.push("tech_lead");
+
+        set({
+          maxUnlockedModule: newMax,
+          unlockedAchievements: currentUnlocked,
+        });
+      },
+
+      // XP тепер просто накопичується для статистики
       increaseScore: (amount = 10) => {
         const currentScore = get().score;
         const newScore = currentScore + amount;
         const currentUnlocked = [...get().unlockedAchievements];
 
-        // Логіка перевірки досягнень
         if (newScore >= 50 && !currentUnlocked.includes("first_steps")) {
           currentUnlocked.push("first_steps");
         }
-        const newMaxLvl = Math.floor(newScore / 100) + 1;
-        if (newMaxLvl === 2 && !currentUnlocked.includes("level_2"))
-          currentUnlocked.push("level_2");
-        if (newMaxLvl === 3 && !currentUnlocked.includes("level_3"))
-          currentUnlocked.push("level_3");
-        if (newMaxLvl === 4 && !currentUnlocked.includes("level_4"))
-          currentUnlocked.push("level_4");
-        if (newMaxLvl === 5 && !currentUnlocked.includes("tech_lead"))
-          currentUnlocked.push("tech_lead");
 
-        set({
-          score: newScore,
-          unlockedAchievements: currentUnlocked,
-        });
+        set({ score: newScore, unlockedAchievements: currentUnlocked });
       },
 
       resetProgress: () => {
         set({
           score: 0,
           selectedLevel: 1,
+          maxUnlockedModule: 1,
           playerName: "",
           isRegistered: false,
           unlockedAchievements: [],
@@ -238,19 +253,9 @@ export const useGameStore = create(
         });
         localStorage.removeItem("english-app-storage");
       },
-
-      // Стан для карток
-      currentWordIndex: 0,
-      isFinished: false,
-      nextWord: () =>
-        set((state) => {
-          const words = get().getAvailableWords();
-          if (state.currentWordIndex >= words.length - 1)
-            return { isFinished: true };
-          return { currentWordIndex: state.currentWordIndex + 1 };
-        }),
-      restartGame: () => set({ currentWordIndex: 0, isFinished: false }),
     }),
-    { name: "english-app-storage" },
+    {
+      name: "english-app-storage",
+    },
   ),
 );
