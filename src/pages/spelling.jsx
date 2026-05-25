@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { theme } from "../styles/theme";
 import { motion, AnimatePresence } from "framer-motion";
-import { Keyboard, CheckCircle2 } from "lucide-react";
+import { Keyboard, CheckCircle2, Trophy } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function Spelling() {
@@ -11,7 +11,7 @@ export default function Spelling() {
   const [words, setWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
-  const [status, setStatus] = useState("idle"); // idle, success, error
+  const [status, setStatus] = useState("idle");
 
   useEffect(() => {
     const available = getAvailableWords();
@@ -23,18 +23,15 @@ export default function Spelling() {
 
   const currentWord = words[currentIndex];
 
-  // Лише оновлює текст, без автоматичного перемикання
   const handleInputChange = (e) => {
-    if (status === "success") return; // Блокуємо зміну після правильної відповіді
+    if (status === "success") return;
     setUserInput(e.target.value);
-    if (status === "error") setStatus("idle"); // Скидаємо статус помилки, якщо користувач почав виправляти
+    if (status === "error") setStatus("idle");
   };
 
-  // Функція, яка спрацьовує при натисканні на кнопку
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Якщо слово вже вгадане, кнопка працює як "Наступне слово"
     if (status === "success") {
       nextWord();
       return;
@@ -45,7 +42,6 @@ export default function Spelling() {
     const target = currentWord.en.toLowerCase();
     const input = userInput.trim().toLowerCase();
 
-    // Перевіряємо правильність
     if (input === target) {
       setStatus("success");
       increaseScore();
@@ -56,7 +52,6 @@ export default function Spelling() {
         colors: [theme.colors.secondary, theme.colors.success],
       });
     } else {
-      // Якщо є помилки, просто показуємо статус помилки на кнопці
       setStatus("error");
     }
   };
@@ -67,7 +62,7 @@ export default function Spelling() {
     if (currentIndex < words.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      setCurrentIndex(0); // Починаємо спочатку, якщо слова закінчились
+      setCurrentIndex(0);
     }
   };
 
@@ -79,27 +74,62 @@ export default function Spelling() {
 
   return (
     <div style={{ maxWidth: "700px", margin: "0 auto", padding: "20px" }}>
-      <header style={{ textAlign: "center", marginBottom: "30px" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            background: `${theme.colors.secondary}15`,
-            color: theme.colors.secondary,
-            padding: "6px 16px",
-            borderRadius: "20px",
-            fontWeight: "bold",
-            fontSize: "13px",
-            marginBottom: "15px",
-          }}
-        >
-          <Keyboard size={16} /> SPELLING: MODULE {selectedLevel}
+      {/* УНІФІКОВАНА ШАПКА: Модуль, Заголовок, Прогрес та XP */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginBottom: "30px",
+        }}
+      >
+        <div>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: `${theme.colors.secondary}15`,
+              color: theme.colors.secondary,
+              padding: "5px 12px",
+              borderRadius: "12px",
+              fontWeight: "bold",
+              fontSize: "12px",
+              marginBottom: "8px",
+            }}
+          >
+            <Keyboard size={14} /> MODULE {selectedLevel}
+          </div>
+          <h2 style={{ margin: 0, fontSize: "28px", color: theme.colors.text }}>
+            Надрукуй термін
+          </h2>
         </div>
-        <h1 style={{ fontSize: "32px", color: theme.colors.text, margin: 0 }}>
-          Надрукуй термін
-        </h1>
-      </header>
+
+        <div style={{ textAlign: "right" }}>
+          <div
+            style={{
+              fontSize: "12px",
+              fontWeight: "bold",
+              color: theme.colors.textMuted,
+              marginBottom: "4px",
+            }}
+          >
+            СЛОВО {currentIndex + 1} / {words.length}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              color: theme.colors.primary,
+              fontWeight: "bold",
+              fontSize: "18px",
+            }}
+          >
+            <Trophy size={20} /> {score} XP
+          </div>
+        </div>
+      </div>
 
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -136,7 +166,6 @@ export default function Spelling() {
           {currentWord.ua}
         </h2>
 
-        {/* Панель підсвічування літер в реальному часі */}
         <div
           style={{
             display: "flex",
@@ -149,7 +178,6 @@ export default function Spelling() {
           {Array.from({ length: displayLength }).map((_, i) => {
             const tChar = targetChars[i];
             const uChar = userChars[i];
-
             let borderColor = "#e2e8f0";
             let textColor = "#94a3b8";
             let bgColor = "transparent";
@@ -199,7 +227,6 @@ export default function Spelling() {
           })}
         </div>
 
-        {/* Форма з полем вводу та кнопкою */}
         <form
           onSubmit={handleSubmit}
           style={{ position: "relative", maxWidth: "400px", margin: "0 auto" }}
@@ -217,13 +244,7 @@ export default function Spelling() {
               fontSize: "18px",
               textAlign: "center",
               borderRadius: theme.radius.md,
-              border: `2px solid ${
-                status === "success"
-                  ? theme.colors.success
-                  : status === "error"
-                    ? theme.colors.danger
-                    : "#e2e8f0"
-              }`,
+              border: `2px solid ${status === "success" ? theme.colors.success : status === "error" ? theme.colors.danger : "#e2e8f0"}`,
               background:
                 status === "success" ? `${theme.colors.success}10` : "#f8fafc",
               outline: "none",
@@ -232,7 +253,6 @@ export default function Spelling() {
               marginBottom: "20px",
             }}
           />
-
           <button
             type="submit"
             style={{
@@ -270,19 +290,6 @@ export default function Spelling() {
           </button>
         </form>
       </motion.div>
-
-      <div style={{ marginTop: "30px", textAlign: "center" }}>
-        <p
-          style={{
-            margin: 0,
-            color: theme.colors.textMuted,
-            fontSize: "12px",
-            fontWeight: "600",
-          }}
-        >
-          ПРОГРЕС: {currentIndex + 1} / {words.length}
-        </p>
-      </div>
     </div>
   );
 }

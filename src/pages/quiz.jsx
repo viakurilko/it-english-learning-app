@@ -9,13 +9,22 @@ export default function Quiz() {
   const { getAvailableWords, score, increaseScore, selectedLevel } =
     useGameStore();
   const [currentQuestion, setCurrentQuestion] = useState(null);
-  const [feedback, setFeedback] = useState(""); // "correct" або "wrong"
+  const [feedback, setFeedback] = useState("");
   const [isAnswered, setIsAnswered] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
 
-  const generateQuestion = () => {
+  // Додано для синхронізації прогресу
+  const [totalWords, setTotalWords] = useState(0);
+  const [questionCount, setQuestionCount] = useState(0);
+
+  const generateQuestion = (isFirstLoad = false) => {
     const availableWords = getAvailableWords();
     if (availableWords.length < 4) return;
+
+    if (isFirstLoad) {
+      setTotalWords(availableWords.length);
+      setQuestionCount(0);
+    }
 
     const correctWord =
       availableWords[Math.floor(Math.random() * availableWords.length)];
@@ -30,10 +39,13 @@ export default function Quiz() {
     setFeedback("");
     setIsAnswered(false);
     setSelectedId(null);
+    setQuestionCount((prev) =>
+      prev >= totalWords && !isFirstLoad ? 1 : prev + 1,
+    );
   };
 
   useEffect(() => {
-    generateQuestion();
+    generateQuestion(true);
   }, [selectedLevel]);
 
   const handleAnswer = (option) => {
@@ -50,10 +62,10 @@ export default function Quiz() {
         origin: { y: 0.7 },
         colors: [theme.colors.primary, theme.colors.success],
       });
-      setTimeout(generateQuestion, 1500);
+      setTimeout(() => generateQuestion(false), 1500);
     } else {
       setFeedback("wrong");
-      setTimeout(generateQuestion, 2500);
+      setTimeout(() => generateQuestion(false), 2500);
     }
   };
 
@@ -61,7 +73,7 @@ export default function Quiz() {
 
   return (
     <div style={{ maxWidth: "750px", margin: "0 auto", padding: "20px" }}>
-      {/* Статистика та заголовок */}
+      {/* УНІФІКОВАНА ШАПКА: Модуль, Заголовок, Прогрес та XP */}
       <div
         style={{
           display: "flex",
@@ -85,7 +97,7 @@ export default function Quiz() {
               marginBottom: "8px",
             }}
           >
-            <Target size={14} /> QUIZ: LEVEL {selectedLevel}
+            <Target size={14} /> MODULE {selectedLevel}
           </div>
           <h2 style={{ margin: 0, fontSize: "28px", color: theme.colors.text }}>
             Обери переклад
@@ -93,6 +105,16 @@ export default function Quiz() {
         </div>
 
         <div style={{ textAlign: "right" }}>
+          <div
+            style={{
+              fontSize: "12px",
+              fontWeight: "bold",
+              color: theme.colors.textMuted,
+              marginBottom: "4px",
+            }}
+          >
+            СЛОВО {questionCount} / {totalWords}
+          </div>
           <div
             style={{
               display: "flex",
@@ -108,7 +130,6 @@ export default function Quiz() {
         </div>
       </div>
 
-      {/* Компактна картка питання */}
       <motion.div
         key={currentQuestion.target.en}
         initial={{ y: 20, opacity: 0 }}
@@ -134,7 +155,6 @@ export default function Quiz() {
         >
           {currentQuestion.target.en}
         </h1>
-
         <AnimatePresence>
           {feedback && (
             <motion.div
@@ -162,13 +182,8 @@ export default function Quiz() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Акуратна сітка варіантів */}
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "15px",
-        }}
+        style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}
       >
         {currentQuestion.options.map((option) => {
           const isCorrect =
@@ -214,7 +229,6 @@ export default function Quiz() {
         })}
       </div>
 
-      {/* Компактна підказка */}
       <div
         style={{
           marginTop: "30px",

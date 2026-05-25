@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGameStore } from "../store/useGameStore";
 import { theme } from "../styles/theme";
 import { motion, AnimatePresence } from "framer-motion";
-import { RotateCcw, ArrowRight, Info } from "lucide-react";
+import { RotateCcw, ArrowRight, Info, BookOpen } from "lucide-react";
 
 export default function Game() {
   const {
@@ -31,7 +31,7 @@ export default function Game() {
           Модуль завершено!
         </h2>
         <p style={{ color: theme.colors.textMuted, marginBottom: "40px" }}>
-          Ви успішно ознайомилися з усіма термінами Рівня {selectedLevel}.
+          Ви успішно ознайомилися з усіма термінами Модуля {selectedLevel}.
         </p>
         <button
           onClick={restartGame}
@@ -57,6 +57,9 @@ export default function Game() {
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <span
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
             background: `${theme.colors.primary}15`,
             color: theme.colors.primary,
             padding: "8px 20px",
@@ -65,10 +68,10 @@ export default function Game() {
             fontSize: "14px",
           }}
         >
-          ТЕОРІЯ: РІВЕНЬ {selectedLevel}
+          <BookOpen size={16} /> ТЕОРІЯ: MODULE {selectedLevel}
         </span>
         <h2 style={{ marginTop: "20px", color: theme.colors.textMuted }}>
-          {currentWordIndex + 1} з {words.length} термінів
+          СЛОВО {currentWordIndex + 1} / {words.length}
         </h2>
       </div>
 
@@ -111,7 +114,7 @@ export default function Game() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "20px", // додаємо відступи, щоб довгі слова не торкалися країв
+              padding: "20px",
               boxSizing: "border-box",
               border: "1px solid rgba(0,0,0,0.05)",
             }}
@@ -121,13 +124,12 @@ export default function Game() {
                 fontSize: "44px",
                 color: theme.colors.primary,
                 margin: 0,
-                textAlign: "center", // ЦЕНТРУЄ ТЕКСТ, ЯКЩО ВІН У ДВА РЯДКИ
-                lineHeight: "1.2", // покращує вигляд при розриві рядка
+                textAlign: "center",
+                lineHeight: "1.2",
               }}
             >
               {currentWord.en}
             </h1>
-            {/* ... підказка ... */}
           </div>
 
           {/* Задня сторона (Українська) */}
@@ -153,7 +155,7 @@ export default function Game() {
               style={{
                 fontSize: "44px",
                 margin: 0,
-                textAlign: "center", // ЦЕНТРУЄ ТЕКСТ, ЯКЩО ВІН У ДВА РЯДКИ
+                textAlign: "center",
                 lineHeight: "1.2",
               }}
             >
