@@ -12,13 +12,20 @@ export default function Spelling() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState("");
   const [status, setStatus] = useState("idle");
+  const [isFinished, setIsFinished] = useState(false); // НОВИЙ СТАН
 
-  useEffect(() => {
+  // Перемішуємо слова ТІЛЬКИ при зміні модуля або натисканні "Повторити"
+  const startModule = () => {
     const available = getAvailableWords();
-    setWords(available.sort(() => 0.5 - Math.random()));
+    setWords([...available].sort(() => 0.5 - Math.random()));
     setCurrentIndex(0);
     setUserInput("");
     setStatus("idle");
+    setIsFinished(false);
+  };
+
+  useEffect(() => {
+    startModule();
   }, [selectedLevel]);
 
   const currentWord = words[currentIndex];
@@ -31,12 +38,10 @@ export default function Spelling() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (status === "success") {
       nextWord();
       return;
     }
-
     if (!userInput.trim()) return;
 
     const target = currentWord.en.toLowerCase();
@@ -59,12 +64,55 @@ export default function Spelling() {
   const nextWord = () => {
     setStatus("idle");
     setUserInput("");
+    // Якщо слова ще є - йдемо далі. Якщо ні - показуємо екран завершення
     if (currentIndex < words.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      setCurrentIndex(0);
+      setIsFinished(true);
     }
   };
+
+  // ЕКРАН ЗАВЕРШЕННЯ МОДУЛЯ
+  if (isFinished) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px 20px" }}>
+        <h2
+          style={{
+            fontSize: "42px",
+            color: theme.colors.text,
+            marginBottom: "20px",
+          }}
+        >
+          Правопис завершено!
+        </h2>
+        <p
+          style={{
+            color: theme.colors.textMuted,
+            marginBottom: "40px",
+            fontSize: "18px",
+          }}
+        >
+          Ви безпомилково написали всі терміни Модуля {selectedLevel}.
+        </p>
+        <button
+          onClick={startModule}
+          style={{
+            padding: "15px 40px",
+            background: theme.colors.secondary,
+            color: "white",
+            border: "none",
+            borderRadius: theme.radius.md,
+            fontWeight: "700",
+            boxShadow: theme.shadows.button,
+            cursor: "pointer",
+            fontSize: "16px",
+          }}
+        >
+          Тренуватись ще раз
+        </button>
+      </div>
+    );
+  }
 
   if (!currentWord) return null;
 
@@ -74,7 +122,6 @@ export default function Spelling() {
 
   return (
     <div style={{ maxWidth: "700px", margin: "0 auto", padding: "20px" }}>
-      {/* УНІФІКОВАНА ШАПКА: Модуль, Заголовок, Прогрес та XP */}
       <div
         style={{
           display: "flex",
@@ -181,7 +228,6 @@ export default function Spelling() {
             let borderColor = "#e2e8f0";
             let textColor = "#94a3b8";
             let bgColor = "transparent";
-
             if (uChar) {
               if (!tChar) {
                 borderColor = theme.colors.danger;
@@ -197,7 +243,6 @@ export default function Spelling() {
                 bgColor = `${theme.colors.danger}15`;
               }
             }
-
             return (
               <motion.div
                 key={i}

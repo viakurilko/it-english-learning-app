@@ -8,26 +8,36 @@ import { Trophy, Target, HelpCircle } from "lucide-react";
 export default function Quiz() {
   const { getAvailableWords, score, increaseScore, selectedLevel } =
     useGameStore();
+  const [quizWords, setQuizWords] = useState([]); // Відсортована черга слів
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [isAnswered, setIsAnswered] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
+  const [isFinished, setIsFinished] = useState(false);
 
-  // Додано для синхронізації прогресу
-  const [totalWords, setTotalWords] = useState(0);
-  const [questionCount, setQuestionCount] = useState(0);
+  // Створюємо чергу слів один раз
+  const startModule = () => {
+    const available = getAvailableWords();
+    setQuizWords([...available].sort(() => 0.5 - Math.random()));
+    setCurrentIndex(0);
+    setIsFinished(false);
+  };
 
-  const generateQuestion = (isFirstLoad = false) => {
-    const availableWords = getAvailableWords();
-    if (availableWords.length < 4) return;
+  useEffect(() => {
+    startModule();
+  }, [selectedLevel]);
 
-    if (isFirstLoad) {
-      setTotalWords(availableWords.length);
-      setQuestionCount(0);
+  // Генеруємо варіанти відповідей для поточного слова в черзі
+  useEffect(() => {
+    if (quizWords.length === 0) return;
+    if (currentIndex >= quizWords.length) {
+      setIsFinished(true);
+      return;
     }
 
-    const correctWord =
-      availableWords[Math.floor(Math.random() * availableWords.length)];
+    const correctWord = quizWords[currentIndex];
+    const availableWords = getAvailableWords();
     const otherWords = availableWords.filter((w) => w.id !== correctWord.id);
     const shuffledOthers = [...otherWords].sort(() => 0.5 - Math.random());
     const wrongOptions = shuffledOthers.slice(0, 3);
@@ -39,14 +49,7 @@ export default function Quiz() {
     setFeedback("");
     setIsAnswered(false);
     setSelectedId(null);
-    setQuestionCount((prev) =>
-      prev >= totalWords && !isFirstLoad ? 1 : prev + 1,
-    );
-  };
-
-  useEffect(() => {
-    generateQuestion(true);
-  }, [selectedLevel]);
+  }, [quizWords, currentIndex, selectedLevel]);
 
   const handleAnswer = (option) => {
     if (isAnswered) return;
@@ -62,18 +65,59 @@ export default function Quiz() {
         origin: { y: 0.7 },
         colors: [theme.colors.primary, theme.colors.success],
       });
-      setTimeout(() => generateQuestion(false), 1500);
+      setTimeout(() => setCurrentIndex((prev) => prev + 1), 1500);
     } else {
       setFeedback("wrong");
-      setTimeout(() => generateQuestion(false), 2500);
+      setTimeout(() => setCurrentIndex((prev) => prev + 1), 2500);
     }
   };
+
+  // ЕКРАН ЗАВЕРШЕННЯ
+  if (isFinished) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px 20px" }}>
+        <h2
+          style={{
+            fontSize: "42px",
+            color: theme.colors.text,
+            marginBottom: "20px",
+          }}
+        >
+          Вікторину завершено!
+        </h2>
+        <p
+          style={{
+            color: theme.colors.textMuted,
+            marginBottom: "40px",
+            fontSize: "18px",
+          }}
+        >
+          Ви перевірили свої знання всіх термінів Модуля {selectedLevel}.
+        </p>
+        <button
+          onClick={startModule}
+          style={{
+            padding: "15px 40px",
+            background: theme.colors.primary,
+            color: "white",
+            border: "none",
+            borderRadius: theme.radius.md,
+            fontWeight: "700",
+            boxShadow: theme.shadows.button,
+            cursor: "pointer",
+            fontSize: "16px",
+          }}
+        >
+          Пройти тест ще раз
+        </button>
+      </div>
+    );
+  }
 
   if (!currentQuestion) return null;
 
   return (
     <div style={{ maxWidth: "750px", margin: "0 auto", padding: "20px" }}>
-      {/* УНІФІКОВАНА ШАПКА: Модуль, Заголовок, Прогрес та XP */}
       <div
         style={{
           display: "flex",
@@ -113,7 +157,7 @@ export default function Quiz() {
               marginBottom: "4px",
             }}
           >
-            СЛОВО {questionCount} / {totalWords}
+            СЛОВО {currentIndex + 1} / {quizWords.length}
           </div>
           <div
             style={{
@@ -227,23 +271,6 @@ export default function Quiz() {
             </motion.button>
           );
         })}
-      </div>
-
-      <div
-        style={{
-          marginTop: "30px",
-          textAlign: "center",
-          opacity: 0.5,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "6px",
-        }}
-      >
-        <HelpCircle size={14} />
-        <span style={{ fontSize: "12px", fontWeight: "500" }}>
-          Обери одну вірну відповідь
-        </span>
       </div>
     </div>
   );

@@ -187,7 +187,7 @@ function AppContent() {
           >
             <Zap color="white" fill="white" size={16} />
             <span style={{ fontSize: "13px", fontWeight: "600" }}>
-              Рівень {currentLevel} досягнуто!
+              Модуль {currentLevel} досягнуто!
             </span>
           </motion.div>
         )}
